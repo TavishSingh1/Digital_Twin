@@ -260,9 +260,274 @@ def create_error_chart(
     return fig
 
 
-def create_metrics_comparison_chart(metrics: dict[str, Any], dark_mode: bool = True) -> go.Figure:
+def _normalize_prediction_eval_df(df: pd.DataFrame) -> pd.DataFrame:
+    """Standardizes column names between live pipeline prediction DF and historical eval DF."""
+    if df.empty:
+        return pd.DataFrame()
+    norm = df.copy()
+    col_mapping = {
+        "predicted_occupants": "predicted_integer",
+        "persistence_occupants": "persistence",
+        "actual_occupants_at_target": "actual",
+        "trend_occupants": "recent_trend",
+    }
+    for old_c, new_c in col_mapping.items():
+        if old_c in norm.columns and new_c not in norm.columns:
+            norm[new_c] = norm[old_c]
+
+    if "recent_trend" not in norm.columns and "persistence" in norm.columns:
+        norm["recent_trend"] = norm["persistence"]
+
+    if "actual" in norm.columns:
+        norm = norm[norm["actual"].notna()]
+    if "status" in norm.columns:
+        norm = norm[norm["status"] == "SUCCESS"]
+
+    return norm
+
+
+def create_actual_vs_predicted_chart(
+    eval_df: pd.DataFrame,
+    room_id: Optional[str] = None,
+    show_persistence: bool = True,
+    show_trend: bool = True,
+    show_continuous: bool = True,
+    time_window_samples: Optional[int] = None,
+    dark_mode: bool = True,
+) -> go.Figure:
     """
-    Renders bar chart comparing STGNN Integer MAE vs Persistence MAE across all rooms.
+    Renders actual ground truth vs 15-minute STGNN forecasts and benchmark baselines.
+    All forecasts are strictly aligned and plotted at their future target timestamp (t + 15m).
+    """
+    fig = go.Figure()
+    norm_df = _normalize_prediction_eval_df(eval_df)
+    if norm_df.empty:
+        fig.add_annotation(text="No evaluated forecasts with ground-truth observations available", showarrow=False)
+        fig.update_layout(template="plotly_dark" if dark_mode else "plotly_white", height=380)
+        return fig
+
+    if room_id and room_id in EXPECTED_ROOM_IDS:
+        rdf = norm_df[norm_df["room_id"] == room_id].copy()
+        title = f"Ground Truth vs 15-Minute STGNN Forecast — Room {room_id}"
+    else:
+        agg_cols = {"actual": "sum", "predicted_integer": "sum"}
+        if "predicted_continuous" in norm_df.columns:
+            agg_cols["predicted_continuous"] = "sum"
+        if "persistence" in norm_df.columns:
+            agg_cols["persistence"] = "sum"
+        if "recent_trend" in norm_df.columns:
+            agg_cols["recent_trend"] = "sum"
+        rdf = norm_df.groupby("target_timestamp", as_index=False).agg(agg_cols)
+        title = "Ground Truth vs 15-Minute STGNN Forecast — Building Total"
+
+    rdf = rdf.sort_values("target_timestamp")
+    if time_window_samples and len(rdf) > time_window_samples:
+        rdf = rdf.tail(time_window_samples)
+
+    ts = pd.to_datetime(rdf["target_timestamp"])
+
+    # 1. Ground Truth
+    fig.add_trace(
+        go.Scatter(
+            x=ts,
+            y=rdf["actual"],
+            mode="lines+markers",
+            name="Ground Truth (Actual at t+15m)",
+            line=dict(color="#10B981", width=2.5),
+            marker=dict(size=6, symbol="circle"),
+            hovertemplate="Time: %{x}<br>Actual: %{y} occ<extra></extra>",
+        )
+    )
+
+    # 2. STGNN Discrete Integer Forecast
+    fig.add_trace(
+        go.Scatter(
+            x=ts,
+            y=rdf["predicted_integer"],
+            mode="lines+markers",
+            name="STGNN Forecast (Integer)",
+            line=dict(color="#38BDF8", width=2.2),
+            marker=dict(size=6, symbol="cross"),
+            hovertemplate="Time: %{x}<br>STGNN Forecast: %{y} occ<extra></extra>",
+        )
+    )
+
+    # 3. STGNN Raw Continuous Forecast
+    if show_continuous and "predicted_continuous" in rdf.columns:
+        fig.add_trace(
+            go.Scatter(
+                x=ts,
+                y=rdf["predicted_continuous"].round(2),
+                mode="lines",
+                name="STGNN Raw (Continuous)",
+                line=dict(color="#06B6D4", width=1.5, dash="dot"),
+                hovertemplate="Time: %{x}<br>STGNN Continuous: %{y:.2f} occ<extra></extra>",
+            )
+        )
+
+    # 4. Persistence Baseline
+    if show_persistence and "persistence" in rdf.columns:
+        fig.add_trace(
+            go.Scatter(
+                x=ts,
+                y=rdf["persistence"],
+                mode="lines",
+                name="Persistence Baseline (yt)",
+                line=dict(color="#F59E0B", width=1.5, dash="dash"),
+                hovertemplate="Time: %{x}<br>Persistence: %{y} occ<extra></extra>",
+            )
+        )
+
+    # 5. Recent-Trend Baseline
+    if show_trend and "recent_trend" in rdf.columns:
+        fig.add_trace(
+            go.Scatter(
+                x=ts,
+                y=rdf["recent_trend"],
+                mode="lines",
+                name="Recent-Trend Baseline (yt + Δ15m)",
+                line=dict(color="#A855F7", width=1.5, dash="dashdot"),
+                hovertemplate="Time: %{x}<br>Trend Baseline: %{y} occ<extra></extra>",
+            )
+        )
+
+    fig.update_layout(
+        title=dict(text=title, font=dict(size=14)),
+        xaxis=dict(title="Forecast Target Time (UTC, t + 15 min)", showgrid=True),
+        yaxis=dict(title="Occupant Count", showgrid=True, rangemode="tozero"),
+        template="plotly_dark" if dark_mode else "plotly_white",
+        margin=dict(l=30, r=30, t=50, b=30),
+        height=380,
+        legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1),
+        hovermode="x unified",
+    )
+    return fig
+
+
+def create_error_distribution_chart(
+    eval_df: pd.DataFrame,
+    room_id: Optional[str] = None,
+    dark_mode: bool = True,
+) -> go.Figure:
+    """
+    Renders prediction residual error histogram comparing STGNN against Persistence.
+    """
+    fig = go.Figure()
+    norm_df = _normalize_prediction_eval_df(eval_df)
+    if norm_df.empty:
+        fig.add_annotation(text="No evaluated prediction samples available", showarrow=False)
+        fig.update_layout(template="plotly_dark" if dark_mode else "plotly_white", height=320)
+        return fig
+
+    if room_id and room_id in EXPECTED_ROOM_IDS:
+        rdf = norm_df[norm_df["room_id"] == room_id].copy()
+        title = f"Prediction Error Distribution — Room {room_id}"
+    else:
+        rdf = norm_df.copy()
+        title = "Prediction Error Distribution (All Rooms)"
+
+    stgnn_err = rdf["predicted_integer"] - rdf["actual"]
+    pers_err = rdf["persistence"] - rdf["actual"]
+
+    fig.add_trace(
+        go.Histogram(
+            x=stgnn_err,
+            name="STGNN Error (Pred - Actual)",
+            marker_color="#38BDF8",
+            opacity=0.75,
+            xbins=dict(start=-10.5, end=10.5, size=1.0),
+        )
+    )
+
+    fig.add_trace(
+        go.Histogram(
+            x=pers_err,
+            name="Persistence Error (Pers - Actual)",
+            marker_color="#F59E0B",
+            opacity=0.6,
+            xbins=dict(start=-10.5, end=10.5, size=1.0),
+        )
+    )
+
+    fig.add_vline(x=0, line_dash="solid", line_color="#E2E8F0", line_width=1.5)
+
+    fig.update_layout(
+        title=dict(text=title, font=dict(size=14)),
+        xaxis=dict(title="Forecast Error (Occupants: 0 = Exact Prediction)", showgrid=True, dtick=1),
+        yaxis=dict(title="Sample Frequency", showgrid=True),
+        barmode="overlay",
+        template="plotly_dark" if dark_mode else "plotly_white",
+        margin=dict(l=30, r=30, t=50, b=30),
+        height=320,
+        legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1),
+    )
+    return fig
+
+
+def create_responsiveness_delta_chart(
+    eval_df: pd.DataFrame,
+    room_id: Optional[str] = None,
+    dark_mode: bool = True,
+) -> go.Figure:
+    """
+    Renders histogram of STGNN raw continuous forecast deltas (yt+3,cont - yt).
+    """
+    fig = go.Figure()
+    if eval_df.empty:
+        fig.add_annotation(text="No prediction samples available for delta analysis", showarrow=False)
+        fig.update_layout(template="plotly_dark" if dark_mode else "plotly_white", height=320)
+        return fig
+
+    rdf = eval_df.copy()
+    if room_id and room_id in EXPECTED_ROOM_IDS:
+        rdf = rdf[rdf["room_id"] == room_id]
+        title = f"STGNN Raw Continuous Forecast Delta Distribution — Room {room_id}"
+    else:
+        title = "STGNN Raw Continuous Forecast Delta Distribution (All Rooms)"
+
+    if "forecast_delta_raw" in rdf.columns:
+        deltas = rdf["forecast_delta_raw"].dropna().to_numpy(dtype=float)
+    elif "predicted_continuous" in rdf.columns and "persistence_occupants" in rdf.columns:
+        deltas = (rdf["predicted_continuous"] - rdf["persistence_occupants"]).dropna().to_numpy(dtype=float)
+    elif "predicted_continuous" in rdf.columns and "persistence" in rdf.columns:
+        deltas = (rdf["predicted_continuous"] - rdf["persistence"]).dropna().to_numpy(dtype=float)
+    else:
+        fig.add_annotation(text="Continuous delta telemetry not available", showarrow=False)
+        fig.update_layout(template="plotly_dark" if dark_mode else "plotly_white", height=320)
+        return fig
+
+    if len(deltas) == 0:
+        fig.add_annotation(text="No valid delta values computed", showarrow=False)
+        fig.update_layout(template="plotly_dark" if dark_mode else "plotly_white", height=320)
+        return fig
+
+    fig.add_trace(
+        go.Histogram(
+            x=deltas,
+            nbinsx=40,
+            marker_color="#06B6D4",
+            name="Continuous Delta (yt+3,cont - yt)",
+            opacity=0.8,
+        )
+    )
+
+    fig.add_vline(x=0, line_dash="dash", line_color="#EF4444", line_width=1.5, annotation_text="Zero Delta")
+
+    fig.update_layout(
+        title=dict(text=title, font=dict(size=14)),
+        xaxis=dict(title="Continuous Delta (Occupants: yt+3,cont - yt)", showgrid=True),
+        yaxis=dict(title="Frequency", showgrid=True),
+        template="plotly_dark" if dark_mode else "plotly_white",
+        margin=dict(l=30, r=30, t=50, b=30),
+        height=320,
+        showlegend=False,
+    )
+    return fig
+
+
+def create_metrics_comparison_chart(metrics: dict[str, Any], include_trend: bool = False, dark_mode: bool = True) -> go.Figure:
+    """
+    Renders bar chart comparing STGNN Integer MAE vs Persistence MAE (and optionally Recent-Trend MAE) across all rooms.
     """
     fig = go.Figure()
     room_metrics = metrics.get("room_metrics", {})
@@ -271,15 +536,15 @@ def create_metrics_comparison_chart(metrics: dict[str, Any], dark_mode: bool = T
         return fig
 
     rooms = list(room_metrics.keys())
-    stgnn_maes = [room_metrics[r]["stgnn_int_mae"] for r in rooms]
-    pers_maes = [room_metrics[r]["persistence_mae"] for r in rooms]
+    stgnn_maes = [room_metrics[r].get("stgnn_int_mae", 0.0) for r in rooms]
+    pers_maes = [room_metrics[r].get("persistence_mae", 0.0) for r in rooms]
 
     fig.add_trace(
         go.Bar(
             x=rooms,
             y=stgnn_maes,
             name="STGNN Integer MAE",
-            marker_color="#3498DB",
+            marker_color="#38BDF8",
         )
     )
 
@@ -287,15 +552,26 @@ def create_metrics_comparison_chart(metrics: dict[str, Any], dark_mode: bool = T
         go.Bar(
             x=rooms,
             y=pers_maes,
-            name="Persistence Baseline MAE",
-            marker_color="#F39C12",
+            name="Persistence MAE",
+            marker_color="#F59E0B",
         )
     )
 
+    if include_trend and any("trend_mae" in room_metrics[r] for r in rooms):
+        trend_maes = [room_metrics[r].get("trend_mae", 0.0) for r in rooms]
+        fig.add_trace(
+            go.Bar(
+                x=rooms,
+                y=trend_maes,
+                name="Recent-Trend MAE",
+                marker_color="#A855F7",
+            )
+        )
+
     fig.update_layout(
-        title=dict(text="Mean Absolute Error (MAE) Comparison by Room", font=dict(size=14)),
+        title=dict(text="Mean Absolute Error (MAE) Benchmark Comparison by Room", font=dict(size=14)),
         xaxis=dict(title="Room"),
-        yaxis=dict(title="MAE (Occupants)", showgrid=True),
+        yaxis=dict(title="MAE (Occupants, Lower is Better)", showgrid=True),
         barmode="group",
         template="plotly_dark" if dark_mode else "plotly_white",
         margin=dict(l=30, r=30, t=50, b=30),
