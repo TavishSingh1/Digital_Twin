@@ -1,0 +1,154 @@
+{
+  "energy_version": "1.0",
+  "description": "Physical ratings, thermal limits, COP, and control policies for smart HVAC and lighting energy management across 5 rooms.",
+  "simulation_assumptions": {
+    "disclaimer": "Simulated virtual equipment ratings and control policies. Values do not represent specific commercial manufacturers or utility billing meters.",
+    "timestep_seconds": 300,
+    "default_seed": 42
+  },
+  "global_defaults": {
+    "hvac": {
+      "cop": 3.2,
+      "default_setpoint_celsius": 24.5,
+      "eco_setpoint_celsius": 28.0,
+      "deadband_celsius": 0.5,
+      "comfort_min_celsius": 22.0,
+      "comfort_max_celsius": 26.5,
+      "occupant_sensible_heat_w": 100.0,
+      "vacancy_delay_minutes": 10.0,
+      "min_stable_power_fraction": 0.20,
+      "standby_power_w": 25.0
+    },
+    "lighting": {
+      "target_illuminance_lux": 300.0,
+      "min_occupied_level_fraction": 0.15,
+      "vacancy_timeout_minutes": 10.0,
+      "standby_power_w": 2.0
+    },
+    "baseline_policy": {
+      "description": "Standard non-smart constant cooling and scheduled lighting baseline for comparative energy savings evaluation.",
+      "fixed_setpoint_celsius": 24.0,
+      "has_eco_mode": false,
+      "lighting_scheduled_hours": [8.0, 18.0],
+      "lighting_daylight_harvesting": false
+    }
+  },
+  "rooms": {
+    "Room 1": {
+      "name": "Main Conference Room / Lobby",
+      "area_m2": 140.0,
+      "capacity": 40,
+      "hvac": {
+        "rated_cooling_capacity_w": 14000.0,
+        "rated_electrical_power_w": 4375.0,
+        "cop": 3.2,
+        "target_setpoint_celsius": 24.5,
+        "eco_setpoint_celsius": 28.0,
+        "standby_power_w": 35.0,
+        "min_stable_power_w": 650.0
+      },
+      "lighting": {
+        "installed_power_w": 420.0,
+        "target_illuminance_lux": 300.0,
+        "min_occupied_fraction": 0.15,
+        "standby_power_w": 3.0
+      },
+      "auxiliary": {
+        "base_power_w": 120.0
+      }
+    },
+    "Room 2": {
+      "name": "Open Office A",
+      "area_m2": 120.0,
+      "capacity": 25,
+      "hvac": {
+        "rated_cooling_capacity_w": 12000.0,
+        "rated_electrical_power_w": 3750.0,
+        "cop": 3.2,
+        "target_setpoint_celsius": 24.5,
+        "eco_setpoint_celsius": 28.0,
+        "standby_power_w": 30.0,
+        "min_stable_power_w": 550.0
+      },
+      "lighting": {
+        "installed_power_w": 360.0,
+        "target_illuminance_lux": 350.0,
+        "min_occupied_fraction": 0.20,
+        "standby_power_w": 2.5
+      },
+      "auxiliary": {
+        "base_power_w": 150.0
+      }
+    },
+    "Room 3": {
+      "name": "Executive Office Suite",
+      "area_m2": 80.0,
+      "capacity": 15,
+      "hvac": {
+        "rated_cooling_capacity_w": 8000.0,
+        "rated_electrical_power_w": 2500.0,
+        "cop": 3.2,
+        "target_setpoint_celsius": 24.0,
+        "eco_setpoint_celsius": 27.5,
+        "standby_power_w": 20.0,
+        "min_stable_power_w": 350.0
+      },
+      "lighting": {
+        "installed_power_w": 240.0,
+        "target_illuminance_lux": 300.0,
+        "min_occupied_fraction": 0.15,
+        "standby_power_w": 2.0
+      },
+      "auxiliary": {
+        "base_power_w": 80.0
+      }
+    },
+    "Room 4": {
+      "name": "Open Office B",
+      "area_m2": 100.0,
+      "capacity": 20,
+      "hvac": {
+        "rated_cooling_capacity_w": 10000.0,
+        "rated_electrical_power_w": 3125.0,
+        "cop": 3.2,
+        "target_setpoint_celsius": 24.5,
+        "eco_setpoint_celsius": 28.0,
+        "standby_power_w": 25.0,
+        "min_stable_power_w": 450.0
+      },
+      "lighting": {
+        "installed_power_w": 300.0,
+        "target_illuminance_lux": 350.0,
+        "min_occupied_fraction": 0.20,
+        "standby_power_w": 2.0
+      },
+      "auxiliary": {
+        "base_power_w": 120.0
+      }
+    },
+    "Room 5": {
+      "name": "Cafeteria / Lounge",
+      "area_m2": 80.0,
+      "capacity": 20,
+      "hvac": {
+        "rated_cooling_capacity_w": 8000.0,
+        "rated_electrical_power_w": 2500.0,
+        "cop": 3.2,
+        "target_setpoint_celsius": 24.5,
+        "eco_setpoint_celsius": 28.0,
+        "standby_power_w": 20.0,
+        "min_stable_power_w": 350.0
+      },
+      "lighting": {
+        "installed_power_w": 240.0,
+        "target_illuminance_lux": 250.0,
+        "min_occupied_fraction": 0.15,
+        "standby_power_w": 2.0
+      },
+      "auxiliary": {
+        "base_power_w": 160.0
+      }
+    }
+  }
+}
+

@@ -1,0 +1,105 @@
+{
+  "simulation_version": "1.0",
+  "building_name": "Digital Twin 5-Room Facility",
+  "description": "Configurable 5-room layout matching STGNN model topology",
+  "cadence_minutes": 5,
+  "default_start_time": "2021-09-06T08:00:00Z",
+  "default_seed": 42,
+  "rooms": [
+    {
+      "id": "Room 1",
+      "name": "Main Conference Room / Lobby",
+      "width": 14.0,
+      "height": 10.0,
+      "x": 0.0,
+      "y": 0.0,
+      "capacity": 40,
+      "has_exterior_exit": true,
+      "exterior_door_position": [7.0, 0.0]
+    },
+    {
+      "id": "Room 2",
+      "name": "Open Office A",
+      "width": 12.0,
+      "height": 10.0,
+      "x": 14.0,
+      "y": 0.0,
+      "capacity": 25,
+      "has_exterior_exit": false
+    },
+    {
+      "id": "Room 3",
+      "name": "Executive Office Suite",
+      "width": 8.0,
+      "height": 10.0,
+      "x": 0.0,
+      "y": 10.0,
+      "capacity": 15,
+      "has_exterior_exit": false
+    },
+    {
+      "id": "Room 4",
+      "name": "Open Office B",
+      "width": 10.0,
+      "height": 10.0,
+      "x": 8.0,
+      "y": 10.0,
+      "capacity": 20,
+      "has_exterior_exit": false
+    },
+    {
+      "id": "Room 5",
+      "name": "Cafeteria / Lounge",
+      "width": 8.0,
+      "height": 10.0,
+      "x": 18.0,
+      "y": 10.0,
+      "capacity": 20,
+      "has_exterior_exit": false
+    }
+  ],
+  "connections": [
+    {
+      "room_a": "Room 1",
+      "room_b": "Room 2",
+      "door_position": [14.0, 5.0],
+      "door_width": 1.2
+    },
+    {
+      "room_a": "Room 1",
+      "room_b": "Room 3",
+      "door_position": [4.0, 10.0],
+      "door_width": 1.2
+    },
+    {
+      "room_a": "Room 2",
+      "room_b": "Room 4",
+      "door_position": [14.0, 10.0],
+      "door_width": 1.2
+    },
+    {
+      "room_a": "Room 3",
+      "room_b": "Room 4",
+      "door_position": [8.0, 15.0],
+      "door_width": 1.2
+    },
+    {
+      "room_a": "Room 4",
+      "room_b": "Room 5",
+      "door_position": [18.0, 15.0],
+      "door_width": 1.2
+    },
+    {
+      "room_a": "Room 2",
+      "room_b": "Room 5",
+      "door_position": [22.0, 10.0],
+      "door_width": 1.2
+    }
+  ],
+  "simulation_assumptions": {
+    "cadence": "5 minutes logical interval strictly matches STGNN model input sequence timestep",
+    "capacities": "Set above observed historical maximums (Room 1: 38, Room 2: 22, Room 3: 13, Room 4: 18, Room 5: 16)",
+    "topology": "Top-down 2D floorplan with realistic door connections. Note that the original STGNN was trained with a fully connected adjacency matrix."
+  }
+}
+

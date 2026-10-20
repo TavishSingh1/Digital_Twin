@@ -1,0 +1,311 @@
+{
+  "sensor_version": "2.0",
+  "description": "Physical parameters, bounds, and calibration coefficients for realistic occupancy-responsive virtual environmental sensors in 5-room digital twin.",
+  "cadence_minutes": 5,
+  "default_seed": 42,
+  "units": {
+    "illuminance": "lux",
+    "sound_pressure_level": "dBA",
+    "indoor_temperature": "Celsius",
+    "dry_bulb_temperature": "Celsius",
+    "indoor_relative_humidity": "percent (%)",
+    "outdoor_relative_humidity": "percent (%)",
+    "indoor_co2": "parts per million (ppm)"
+  },
+  "outdoor_environment": {
+    "dry_bulb_temperature": {
+      "mean_celsius": 28.03,
+      "diurnal_amplitude_celsius": 2.8,
+      "peak_hour": 14.0,
+      "stochastic_noise_std": 0.10,
+      "min_bound": 20.0,
+      "max_bound": 38.0
+    },
+    "outdoor_relative_humidity": {
+      "mean_percent": 87.0,
+      "diurnal_amplitude_percent": 11.5,
+      "trough_hour": 14.0,
+      "stochastic_noise_std": 0.30,
+      "min_bound": 35.0,
+      "max_bound": 100.0
+    },
+    "outdoor_co2_baseline_ppm": 400.0,
+    "solar_daylight": {
+      "sunrise_hour": 6.0,
+      "sunset_hour": 18.5,
+      "peak_solar_lux": 15000.0
+    }
+  },
+  "rooms": {
+    "Room 1": {
+      "name": "Main Conference Room / Lobby",
+      "ceiling_height_m": 3.0,
+      "width_m": 14.0,
+      "height_m": 10.0,
+      "volume_m3": 420.0,
+      "co2": {
+        "air_exchange_rate_ach": 0.9,
+        "co2_gen_rate_ppm_m3_h_person": 18000.0,
+        "sensor_noise_std": 1.5,
+        "min_bound": 400.0,
+        "max_bound": 2500.0
+      },
+      "temperature": {
+        "setpoint_celsius": 26.84,
+        "envelope_coupling": 0.015,
+        "hvac_coupling": 0.07,
+        "occupant_heat_gain_deg": 0.012,
+        "occupant_heat_gain_w": 100.0,
+        "thermal_capacitance_kj_k": 5040.0,
+        "sensor_noise_std": 0.03,
+        "min_bound": 22.0,
+        "max_bound": 32.0
+      },
+      "relative_humidity": {
+        "setpoint_percent": 75.16,
+        "vent_coupling": 0.02,
+        "hvac_coupling": 0.05,
+        "occupant_moisture_gain_pct": 0.08,
+        "occupant_moisture_g_h": 50.0,
+        "sensor_noise_std": 0.15,
+        "min_bound": 45.0,
+        "max_bound": 95.0
+      },
+      "sound_pressure_level": {
+        "base_level_dba": 48.0,
+        "occupant_activity_dba": 56.0,
+        "sensor_noise_std": 0.35,
+        "min_bound": 40.0,
+        "max_bound": 85.0
+      },
+      "illuminance": {
+        "lighting_policy": "occupancy_vacancy",
+        "vacancy_delay_minutes": 10.0,
+        "artificial_work_lux": 35.0,
+        "artificial_night_lux": 0.0,
+        "window_daylight_factor": 0.003,
+        "sensor_noise_std": 0.5,
+        "min_bound": 0.0,
+        "max_bound": 200.0
+      }
+    },
+    "Room 2": {
+      "name": "Open Office A",
+      "ceiling_height_m": 3.0,
+      "width_m": 12.0,
+      "height_m": 10.0,
+      "volume_m3": 360.0,
+      "co2": {
+        "air_exchange_rate_ach": 0.75,
+        "co2_gen_rate_ppm_m3_h_person": 18000.0,
+        "sensor_noise_std": 2.0,
+        "min_bound": 400.0,
+        "max_bound": 2500.0
+      },
+      "temperature": {
+        "setpoint_celsius": 25.57,
+        "envelope_coupling": 0.02,
+        "hvac_coupling": 0.08,
+        "occupant_heat_gain_deg": 0.015,
+        "occupant_heat_gain_w": 100.0,
+        "thermal_capacitance_kj_k": 4320.0,
+        "sensor_noise_std": 0.04,
+        "min_bound": 20.0,
+        "max_bound": 34.0
+      },
+      "relative_humidity": {
+        "setpoint_percent": 71.20,
+        "vent_coupling": 0.025,
+        "hvac_coupling": 0.06,
+        "occupant_moisture_gain_pct": 0.10,
+        "occupant_moisture_g_h": 50.0,
+        "sensor_noise_std": 0.20,
+        "min_bound": 40.0,
+        "max_bound": 95.0
+      },
+      "sound_pressure_level": {
+        "base_level_dba": 53.0,
+        "occupant_activity_dba": 52.0,
+        "sensor_noise_std": 0.30,
+        "min_bound": 45.0,
+        "max_bound": 85.0
+      },
+      "illuminance": {
+        "lighting_policy": "occupancy_vacancy",
+        "vacancy_delay_minutes": 10.0,
+        "artificial_work_lux": 160.0,
+        "artificial_night_lux": 0.0,
+        "window_daylight_factor": 0.015,
+        "sensor_noise_std": 1.0,
+        "min_bound": 0.0,
+        "max_bound": 2500.0
+      }
+    },
+    "Room 3": {
+      "name": "Executive Office Suite",
+      "ceiling_height_m": 3.0,
+      "width_m": 8.0,
+      "height_m": 10.0,
+      "volume_m3": 240.0,
+      "co2": {
+        "air_exchange_rate_ach": 0.85,
+        "co2_gen_rate_ppm_m3_h_person": 18000.0,
+        "sensor_noise_std": 1.8,
+        "min_bound": 400.0,
+        "max_bound": 2500.0
+      },
+      "temperature": {
+        "setpoint_celsius": 27.29,
+        "envelope_coupling": 0.018,
+        "hvac_coupling": 0.08,
+        "occupant_heat_gain_deg": 0.015,
+        "occupant_heat_gain_w": 100.0,
+        "thermal_capacitance_kj_k": 2880.0,
+        "sensor_noise_std": 0.03,
+        "min_bound": 23.0,
+        "max_bound": 32.0
+      },
+      "relative_humidity": {
+        "setpoint_percent": 61.40,
+        "vent_coupling": 0.015,
+        "hvac_coupling": 0.07,
+        "occupant_moisture_gain_pct": 0.09,
+        "occupant_moisture_g_h": 50.0,
+        "sensor_noise_std": 0.15,
+        "min_bound": 45.0,
+        "max_bound": 85.0
+      },
+      "sound_pressure_level": {
+        "base_level_dba": 54.0,
+        "occupant_activity_dba": 46.0,
+        "sensor_noise_std": 0.25,
+        "min_bound": 48.0,
+        "max_bound": 80.0
+      },
+      "illuminance": {
+        "lighting_policy": "occupancy_vacancy",
+        "vacancy_delay_minutes": 10.0,
+        "artificial_work_lux": 110.0,
+        "artificial_night_lux": 0.0,
+        "window_daylight_factor": 0.008,
+        "sensor_noise_std": 0.8,
+        "min_bound": 0.0,
+        "max_bound": 500.0
+      }
+    },
+    "Room 4": {
+      "name": "Open Office B",
+      "ceiling_height_m": 3.0,
+      "width_m": 10.0,
+      "height_m": 10.0,
+      "volume_m3": 300.0,
+      "co2": {
+        "air_exchange_rate_ach": 0.80,
+        "co2_gen_rate_ppm_m3_h_person": 18000.0,
+        "sensor_noise_std": 1.5,
+        "min_bound": 400.0,
+        "max_bound": 2500.0
+      },
+      "temperature": {
+        "setpoint_celsius": 27.41,
+        "envelope_coupling": 0.015,
+        "hvac_coupling": 0.08,
+        "occupant_heat_gain_deg": 0.014,
+        "occupant_heat_gain_w": 100.0,
+        "thermal_capacitance_kj_k": 3600.0,
+        "sensor_noise_std": 0.02,
+        "min_bound": 23.0,
+        "max_bound": 32.0
+      },
+      "relative_humidity": {
+        "setpoint_percent": 73.08,
+        "vent_coupling": 0.02,
+        "hvac_coupling": 0.06,
+        "occupant_moisture_gain_pct": 0.09,
+        "occupant_moisture_g_h": 50.0,
+        "sensor_noise_std": 0.15,
+        "min_bound": 50.0,
+        "max_bound": 92.0
+      },
+      "sound_pressure_level": {
+        "base_level_dba": 62.0,
+        "occupant_activity_dba": 53.0,
+        "sensor_noise_std": 0.20,
+        "min_bound": 55.0,
+        "max_bound": 85.0
+      },
+      "illuminance": {
+        "lighting_policy": "occupancy_vacancy",
+        "vacancy_delay_minutes": 10.0,
+        "artificial_work_lux": 180.0,
+        "artificial_night_lux": 0.0,
+        "window_daylight_factor": 0.018,
+        "sensor_noise_std": 1.2,
+        "min_bound": 0.0,
+        "max_bound": 2000.0
+      }
+    },
+    "Room 5": {
+      "name": "Cafeteria / Lounge",
+      "ceiling_height_m": 3.0,
+      "width_m": 8.0,
+      "height_m": 10.0,
+      "volume_m3": 240.0,
+      "co2": {
+        "air_exchange_rate_ach": 1.10,
+        "co2_gen_rate_ppm_m3_h_person": 18000.0,
+        "sensor_noise_std": 1.5,
+        "min_bound": 400.0,
+        "max_bound": 2500.0
+      },
+      "temperature": {
+        "setpoint_celsius": 28.18,
+        "envelope_coupling": 0.022,
+        "hvac_coupling": 0.07,
+        "occupant_heat_gain_deg": 0.015,
+        "occupant_heat_gain_w": 100.0,
+        "thermal_capacitance_kj_k": 2880.0,
+        "sensor_noise_std": 0.03,
+        "min_bound": 24.0,
+        "max_bound": 33.0
+      },
+      "relative_humidity": {
+        "setpoint_percent": 62.56,
+        "vent_coupling": 0.018,
+        "hvac_coupling": 0.07,
+        "occupant_moisture_gain_pct": 0.08,
+        "occupant_moisture_g_h": 50.0,
+        "sensor_noise_std": 0.15,
+        "min_bound": 48.0,
+        "max_bound": 85.0
+      },
+      "sound_pressure_level": {
+        "base_level_dba": 49.5,
+        "occupant_activity_dba": 60.0,
+        "sensor_noise_std": 0.30,
+        "min_bound": 42.0,
+        "max_bound": 85.0
+      },
+      "illuminance": {
+        "lighting_policy": "occupancy_vacancy",
+        "vacancy_delay_minutes": 10.0,
+        "artificial_work_lux": 150.0,
+        "artificial_night_lux": 0.0,
+        "window_daylight_factor": 0.065,
+        "sensor_noise_std": 2.5,
+        "min_bound": 0.0,
+        "max_bound": 12000.0
+      }
+    }
+  },
+  "simulation_assumptions": [
+    "Outdoor weather is shared across all rooms with diurnal variation matching historical weather observations.",
+    "Indoor CO2 mass balance uses an exact analytical solution for metabolic generation G*N, room ventilation ACH, and outdoor baseline.",
+    "Indoor temperature response uses a lumped thermal capacitance model balancing HVAC setpoint, envelope heat transfer, and occupant metabolic dissipation (100 W/person).",
+    "Sound pressure level follows standard acoustic decibel power summation of ambient room equipment noise floor and occupant activity noise.",
+    "Illuminance is modeled as policy-driven artificial lighting (occupancy vacancy with delay, scheduled, or manual) plus daylight penetration proportional to solar elevation.",
+    "Indoor relative humidity is derived from psychrometric moisture balance and saturation vapor pressure at indoor temperature.",
+    "Dry-bulb temperature and outdoor relative humidity represent outdoor ambient conditions and are strictly independent of indoor occupancy events.",
+    "Controlled seeded Gaussian noise is added to simulate physical sensor measurement variance without non-physical jumps."
+  ]
+}
